@@ -83,7 +83,6 @@ def top():
 def kill():
     """Kill the process at the top of the stack."""
     process = get_process_from_user("Enter the number of the process to kill:")
-    # ...
     return False
 
 def halt():

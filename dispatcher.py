@@ -24,6 +24,9 @@ class Dispatcher():
 
     def add_process(self, process):
         """Add and start the process."""
+        if not len(self.runnable_stack) == 0:
+            self.runnable_stack[-1].state = State.waiting
+
         process.state = State.runnable
         self.runnable_stack.append(process)
         self.io_sys.allocate_window_to_process(process,
@@ -44,6 +47,7 @@ class Dispatcher():
         effectively pauses the system.
         """
         self.runnable_stack[-1].state = State.waiting
+        self.event.clear()
 
     def resume_system(self):
         """Resume running the system."""

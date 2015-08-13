@@ -80,7 +80,7 @@ class Process(threading.Thread):
         if self.state == State.killed:
             _thread.exit()
         elif self.state == State.waiting:
-            self.event.wait()
+            self.event.clear()
         else:
             self.iosys.write(self, "*")
             sleep(0.1)
