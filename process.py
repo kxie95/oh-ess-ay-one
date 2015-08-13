@@ -79,8 +79,6 @@ class Process(threading.Thread):
         # check to see if supposed to terminate
         if self.state == State.killed:
             _thread.exit()
-        elif self.state == State.waiting:
-            self.event.clear()
-        else:
-            self.iosys.write(self, "*")
-            sleep(0.1)
+        self.event.wait()
+        self.iosys.write(self, "*")
+        sleep(0.1)

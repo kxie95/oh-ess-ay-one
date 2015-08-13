@@ -25,8 +25,10 @@ class Dispatcher():
     def add_process(self, process):
         """Add and start the process."""
         if not len(self.runnable_stack) == 0:
-            self.runnable_stack[-1].state = State.waiting
+            running_process = self.runnable_stack[-1]
+            running_process.event.clear()
 
+        process.event.set()
         process.state = State.runnable
         self.runnable_stack.append(process)
         self.io_sys.allocate_window_to_process(process,
@@ -46,13 +48,11 @@ class Dispatcher():
         As long as the dispatcher doesn't dispatch another process this
         effectively pauses the system.
         """
-        self.runnable_stack[-1].state = State.waiting
-        self.event.clear()
+        self.runnable_stack[-1].event.clear()
 
     def resume_system(self):
         """Resume running the system."""
-        self.event.set()
-        self.runnable_stack[-1].state = State.runnable
+        self.runnable_stack[-1].event.set()
 
     def wait_until_finished(self):
         """Hang around until all runnable processes are finished."""
