@@ -21,7 +21,8 @@ class Process(threading.Thread):
     def __init__(self, iosys, dispatcher, type):
         """Construct a process.
         iosys - the io subsystem so the process can do IO
-        dispatcher - so that the process can notify the dispatcher when it has finished
+        dispatcher - so that the process can notify the dispatcher when it has 
+        finished
         """
         threading.Thread.__init__(self)
         self.id = Process.next_id
@@ -33,9 +34,10 @@ class Process(threading.Thread):
         self.daemon = True
         # You will need a process state variable - self.state
         # which should only be modified by the dispatcher and io system.
-        # the state can be used to determine which list - runnable or waiting the process
-        # appears in.
+        # the state can be used to determine which list - runnable or waiting 
+        # the process appears in.
         self.state = None
+        self.event = threading.Event()
 
     def run(self):
         """Start the process running."""
@@ -77,5 +79,8 @@ class Process(threading.Thread):
         # check to see if supposed to terminate
         if self.state == State.killed:
             _thread.exit()
-        self.iosys.write(self, "*")
-        sleep(0.1)
+        elif self.state == State.waiting:
+            self.event.wait()
+        else:
+            self.iosys.write(self, "*")
+            sleep(0.1)

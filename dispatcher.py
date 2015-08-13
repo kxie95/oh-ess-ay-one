@@ -15,7 +15,8 @@ class Dispatcher():
 
     def __init__(self):
         """Construct the dispatcher."""
-        self.waiting_stack = []
+        self.runnable_stack = []
+        self.event = Event()
 
     def set_io_sys(self, io_sys):
         """Set the io subsystem."""
@@ -23,18 +24,18 @@ class Dispatcher():
 
     def add_process(self, process):
         """Add and start the process."""
-        self.waiting_stack.append(process)
         process.state = State.runnable
+        self.runnable_stack.append(process)
         self.io_sys.allocate_window_to_process(process,
-                                               len(self.waiting_stack) - 1)
+                                               len(self.runnable_stack) - 1)
         process.start()
 
     def dispatch_next_process(self):
-        """Dispatch the process at the top of the stack."""
-        # ...
+        """Dispatch the process at the top of the runnable_stack."""
+        self.runnable_stack[-1].event.set()
 
     def to_top(self, process):
-        """Move the process to the top of the stack."""
+        """Move the process to the top of the runnable_stack."""
         # ...
 
     def pause_system(self):
@@ -42,11 +43,12 @@ class Dispatcher():
         As long as the dispatcher doesn't dispatch another process this
         effectively pauses the system.
         """
-        # ...
+        self.runnable_stack[-1].state = State.waiting
 
     def resume_system(self):
         """Resume running the system."""
-        # ...
+        self.event.set()
+        self.runnable_stack[-1].state = State.runnable
 
     def wait_until_finished(self):
         """Hang around until all runnable processes are finished."""
@@ -64,5 +66,7 @@ class Dispatcher():
 
     def process_with_id(self, id):
         """Return the process with the id."""
-        # ...
+        for process in self.runnable_stack:
+            if process.id == id:
+                return process
         return None
