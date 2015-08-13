@@ -25,7 +25,9 @@ class Dispatcher():
         """Add and start the process."""
         self.waiting_stack.append(process)
         process.state = State.runnable
-        self.io_sys.allocate_window_to_process(process, len(self.waiting_stack) - 1)
+        self.io_sys.allocate_window_to_process(process,
+                                               len(self.waiting_stack) - 1)
+        process.start()
 
     def dispatch_next_process(self):
         """Dispatch the process at the top of the stack."""
