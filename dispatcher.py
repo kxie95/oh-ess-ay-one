@@ -7,6 +7,7 @@
 from threading import Lock, Event
 from process import State
 
+
 class Dispatcher():
     """The dispatcher."""
 
@@ -14,7 +15,7 @@ class Dispatcher():
 
     def __init__(self):
         """Construct the dispatcher."""
-        # ...
+        self.waiting_stack = []
 
     def set_io_sys(self, io_sys):
         """Set the io subsystem."""
@@ -22,7 +23,9 @@ class Dispatcher():
 
     def add_process(self, process):
         """Add and start the process."""
-        # ...
+        self.waiting_stack.append(process)
+        process.state = State.runnable
+        self.io_sys.allocate_window_to_process(process, len(self.waiting_stack) - 1)
 
     def dispatch_next_process(self):
         """Dispatch the process at the top of the stack."""
@@ -31,7 +34,6 @@ class Dispatcher():
     def to_top(self, process):
         """Move the process to the top of the stack."""
         # ...
-
 
     def pause_system(self):
         """Pause the currently running process.
@@ -62,4 +64,3 @@ class Dispatcher():
         """Return the process with the id."""
         # ...
         return None
-

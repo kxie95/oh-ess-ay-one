@@ -35,7 +35,7 @@ class Process(threading.Thread):
         # which should only be modified by the dispatcher and io system.
         # the state can be used to determine which list - runnable or waiting the process
         # appears in.
-        # ...
+        self.state = None
 
     def run(self):
         """Start the process running."""
