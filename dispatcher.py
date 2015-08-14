@@ -25,8 +25,7 @@ class Dispatcher():
     def add_process(self, process):
         """Add and start the process."""
         if not len(self.runnable_stack) == 0:
-            running_process = self.runnable_stack[-1]
-            running_process.event.clear()
+            self.runnable_stack[-1].event.clear()
 
         process.event.set()
         process.state = State.runnable
@@ -41,7 +40,11 @@ class Dispatcher():
 
     def to_top(self, process):
         """Move the process to the top of the runnable_stack."""
-        # ...
+        self.runnable_stack[-1].event.clear()
+
+        self.runnable_stack.remove(process)
+        self.runnable_stack.append(process)
+        process.event.set()
 
     def pause_system(self):
         """Pause the currently running process.

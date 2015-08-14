@@ -76,8 +76,7 @@ def focus():
 def top():
     """Move a runnable process to the top of the stack."""
     process = get_process_from_user("Enter the number of the process to move:")
-    actual_process = the_dispatcher.process_with_id(process)
-    the_dispatcher.to_top(actual_process)
+    the_dispatcher.to_top(process)
     return False
 
 def kill():
