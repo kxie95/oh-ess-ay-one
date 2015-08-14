@@ -40,11 +40,18 @@ class Dispatcher():
 
     def to_top(self, process):
         """Move the process to the top of the runnable_stack."""
-        self.runnable_stack[-1].event.clear()
+        self.runnable_stack[-1].event.clear() # stop current process
+        self.runnable_stack.remove(process) # remove desired process from stack
+        self.io_sys.remove_window_from_process(process) # update display to reflect remove
 
-        self.runnable_stack.remove(process)
+        # shift processes down
+        for x in range(0, len(self.runnable_stack)):
+            self.io_sys.move_process(self.runnable_stack[x], x)
+
+        # put process on top of stack and update display
         self.runnable_stack.append(process)
         process.event.set()
+        self.io_sys.allocate_window_to_process(process, len(self.runnable_stack) - 1)
 
     def pause_system(self):
         """Pause the currently running process.
@@ -77,3 +84,15 @@ class Dispatcher():
             if process.id == id:
                 return process
         return None
+
+    def kill_process(self, process):
+        self.runnable_stack[-1].event.clear() # stop current process
+        process.event.clear() 
+        self.runnable_stack.remove(process) # remove desired process from stack
+        self.io_sys.remove_window_from_process(process) # update display to reflect remove
+
+        # shift processes down
+        for x in range(0, len(self.runnable_stack)):
+            self.io_sys.move_process(self.runnable_stack[x], x)
+
+        self.runnable_stack[-1].event.set()
