@@ -25,8 +25,8 @@ class Dispatcher():
 
     def add_process(self, process):
         """Add and start the process."""
-        if not len(self.runnable_stack) == 0:
-            self.runnable_stack[-1].event.clear()
+        if len(self.runnable_stack) >= 2:
+            self.runnable_stack[-2].event.clear()
 
         process.event.set()
         process.state = State.runnable
@@ -37,7 +37,13 @@ class Dispatcher():
 
     def dispatch_next_process(self):
         """Dispatch the process at the top of the runnable_stack."""
-        self.runnable_stack[-1].event.set()
+        stack_length = len(self.runnable_stack)
+        if stack_length == 0:
+            return
+        else:
+            self.runnable_stack[-1].event.set()
+            if stack_length >= 2:
+                self.runnable_stack[-2].event.set()
 
     def to_top(self, process):
         stack = self.runnable_stack
@@ -64,10 +70,12 @@ class Dispatcher():
         effectively pauses the system.
         """
         self.runnable_stack[-1].event.clear()
+        self.runnable_stack[-2].event.clear()
 
     def resume_system(self):
         """Resume running the system."""
         self.runnable_stack[-1].event.set()
+        self.runnable_stack[-2].event.set()
 
     def wait_until_finished(self):
         """Hang around until all runnable processes are finished."""
@@ -80,8 +88,10 @@ class Dispatcher():
         Only called from running processes.
         """
         if not len(self.runnable_stack) == 0:
-            self.runnable_stack.pop()
+            self.runnable_stack.remove(process)
             self.io_sys.remove_window_from_process(process)
+            for x in range(0, len(self.runnable_stack)):
+                self.io_sys.move_process(self.runnable_stack[x], x)
             self.dispatch_next_process()
 
     def proc_waiting(self, process):
