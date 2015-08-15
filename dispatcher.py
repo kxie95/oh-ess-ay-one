@@ -105,6 +105,9 @@ class Dispatcher():
         for process in self.runnable_stack:
             if process.id == id:
                 return process
+        for process in self.waiting_list:
+            if process.id == id:
+                return process
         return None
 
     def kill_process(self, process):
