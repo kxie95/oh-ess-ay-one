@@ -6,7 +6,7 @@
 
 from threading import Lock, Event
 from process import State
-
+from process import Type
 
 class Dispatcher():
     """The dispatcher."""
@@ -16,7 +16,7 @@ class Dispatcher():
     def __init__(self):
         """Construct the dispatcher."""
         self.runnable_stack = []
-        self.waiting_stack = []
+        self.waiting_list = []
         self.event = Event()
 
     def set_io_sys(self, io_sys):
@@ -25,14 +25,16 @@ class Dispatcher():
 
     def add_process(self, process):
         """Add and start the process."""
-        if len(self.runnable_stack) >= 2:
-            self.runnable_stack[-2].event.clear()
+        if process.type == Type.background:
+            if len(self.runnable_stack) >= 2:
+                self.runnable_stack[-2].event.clear()
+            process.state = State.runnable
+            process.event.set()
+            self.runnable_stack.append(process)
+            self.io_sys.allocate_window_to_process(process, len(self.runnable_stack) - 1)
+        else:
+            self.io_sys.allocate_window_to_process(process, self.insert_at_first_empty(process))
 
-        process.event.set()
-        process.state = State.runnable
-        self.runnable_stack.append(process)
-        self.io_sys.allocate_window_to_process(process,
-                                               len(self.runnable_stack) - 1)
         process.start()
 
     def dispatch_next_process(self):
@@ -96,16 +98,17 @@ class Dispatcher():
 
     def proc_waiting(self, process):
         """Receive notification that process is waiting for input."""
-        # ...
+        process.event.clear()
 
     def process_with_id(self, id):
-        """Return the process with the id."""
+        """Return the process with thee id."""
         for process in self.runnable_stack:
             if process.id == id:
                 return process
         return None
 
     def kill_process(self, process):
+        """Kill a process."""
         process.event.clear()
         self.runnable_stack.remove(process)  # remove desired process from stack
         self.io_sys.remove_window_from_process(process)  # update display to reflect remove
@@ -113,3 +116,11 @@ class Dispatcher():
         # shift processes down
         for x in range(0, len(self.runnable_stack)):
             self.io_sys.move_process(self.runnable_stack[x], x)
+
+    def insert_at_first_empty(self, process):
+        for x in range(0, len(self.waiting_list)):
+            if self.waiting_list[x] is None:
+                self.waiting_list[x] = process
+                return x
+        self.waiting_list.append(process)
+        return (len(self.waiting_list) - 1)
