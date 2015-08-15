@@ -11,6 +11,7 @@ import curses.panel
 import re
 from time import sleep
 
+
 def menu(menu_string):
     """Present menu information, receive key from user and process.
 
@@ -75,13 +76,13 @@ def focus():
 def top():
     """Move a runnable process to the top of the stack."""
     process = get_process_from_user("Enter the number of the process to move:")
-    # ...
+    the_dispatcher.to_top(process)
     return False
 
 def kill():
     """Kill the process at the top of the stack."""
     process = get_process_from_user("Enter the number of the process to kill:")
-    # ...
+    the_dispatcher.kill_process(process)
     return False
 
 def halt():
@@ -90,7 +91,7 @@ def halt():
     without things changing.
     """
     the_dispatcher.pause_system()
-    sleep(10)
+    sleep(5)
     the_dispatcher.resume_system()
     return False
 
