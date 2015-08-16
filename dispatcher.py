@@ -25,15 +25,13 @@ class Dispatcher():
 
     def add_process(self, process):
         """Add and start the process."""
-        if process.type == Type.background:
+        process.state = State.runnable
+        if (process.type == Type.background):
             if len(self.runnable_stack) >= 2:
                 self.runnable_stack[-2].event.clear()
-            process.state = State.runnable
-            process.event.set()
-            self.runnable_stack.append(process)
-            self.io_sys.allocate_window_to_process(process, len(self.runnable_stack) - 1)
-        else:
-            self.io_sys.allocate_window_to_process(process, self.insert_at_first_empty(process))
+        process.event.set()
+        self.runnable_stack.append(process)
+        self.io_sys.allocate_window_to_process(process, len(self.runnable_stack) - 1)
 
         process.start()
 
@@ -99,6 +97,11 @@ class Dispatcher():
     def proc_waiting(self, process):
         """Receive notification that process is waiting for input."""
         process.event.clear()
+        if process.state == State.runnable:
+            process.state = State.waiting
+            self.runnable_stack.remove(process)
+            self.io_sys.move_process(process, self.insert_at_first_empty(process))
+
 
     def process_with_id(self, id):
         """Return the process with thee id."""
@@ -113,12 +116,19 @@ class Dispatcher():
     def kill_process(self, process):
         """Kill a process."""
         process.event.clear()
-        self.runnable_stack.remove(process)  # remove desired process from stack
-        self.io_sys.remove_window_from_process(process)  # update display to reflect remove
+
+        if (process.type == Type.background):
+            self.runnable_stack.remove(process)  # remove desired process from stack
+            self.io_sys.remove_window_from_process(process)  # update display to reflect remove
+            # shift processes down
+            for x in range(0, len(self.runnable_stack)):
+                self.io_sys.move_process(self.runnable_stack[x], x)
+        else:
+            proc_index = self.waiting_list.index(process)
+            self.waiting_list[proc_index] = None
+            self.io_sys.remove_window_from_process(process)
+
         process.state = State.killed
-        # shift processes down
-        for x in range(0, len(self.runnable_stack)):
-            self.io_sys.move_process(self.runnable_stack[x], x)
 
     def insert_at_first_empty(self, process):
         for x in range(0, len(self.waiting_list)):
