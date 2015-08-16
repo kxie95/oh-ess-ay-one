@@ -18,7 +18,8 @@ class Dispatcher():
         self.runnable_stack = []
         self.waiting_list = []
         self.event = Event()
-        self.lock = Lock()
+        self.r_lock = Lock()
+        self.w_lock = Lock()
 
     def set_io_sys(self, io_sys):
         """Set the io subsystem."""
@@ -27,14 +28,16 @@ class Dispatcher():
     def add_process(self, process):
         """Add and start the process."""
         process.state = State.runnable
-        self.lock.acquire()
         if (process.type == Type.background):
+            self.r_lock.acquire()
             if len(self.runnable_stack) >= 2:
                 self.runnable_stack[-2].event.clear()
+            self.r_lock.release()
         process.event.set()
+        self.w_lock.acquire()
         self.runnable_stack.append(process)
         self.io_sys.allocate_window_to_process(process, len(self.runnable_stack) - 1)
-        self.lock.release()
+        self.w_lock.release()
         process.start()
 
     def dispatch_next_process(self):
@@ -101,7 +104,7 @@ class Dispatcher():
                 self.dispatch_next_process()
             else:
                 self.runnable_stack.remove(process)
-                self.io_sys.move_process(process, self.insert_at_first_empty(process))
+                #self.io_sys.move_process(process, self.insert_at_first_empty(process))
 
     def proc_waiting(self, process):
         """Receive notification that process is waiting for input."""
@@ -117,25 +120,28 @@ class Dispatcher():
         for process in self.runnable_stack:
             if process.id == id:
                 return process
-        for process in self.waiting_list:
-            if process.id == id:
-                return process
+        for x in range(0, len(self.waiting_list)):
+            if self.waiting_list[x] is not None:
+                if self.waiting_list[x].id == id:
+                    return self.waiting_list[x]
         return None
 
     def kill_process(self, process):
         """Kill a process."""
         process.event.clear()
 
-        if (process.type == Type.background):
+        if process.state == State.runnable:
             self.runnable_stack.remove(process)  # remove desired process from stack
             self.io_sys.remove_window_from_process(process)  # update display to reflect remove
             # shift processes down
             for x in range(0, len(self.runnable_stack)):
                 self.io_sys.move_process(self.runnable_stack[x], x)
-        else:
+        elif process.state == State.waiting:
             proc_index = self.waiting_list.index(process)
             self.waiting_list[proc_index] = None
             self.io_sys.remove_window_from_process(process)
+        else:
+            pass
 
         process.state = State.killed
 
@@ -152,7 +158,7 @@ class Dispatcher():
         """Move an interactive process to the runnable stack."""
         if len(self.runnable_stack) >= 2:
             self.runnable_stack[-2].event.clear()
-        self.waiting_list.remove(process)
+        self.waiting_list[self.waiting_list.index(process)] = None
         process.state = State.runnable
         self.io_sys.move_process(process, len(self.runnable_stack))
         self.runnable_stack.append(process)

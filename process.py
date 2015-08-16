@@ -58,6 +58,8 @@ class Process(threading.Thread):
                 self.main_process_body()
             self.iosys.write(self, "\n")
             loops = self.ask_user()
+        if loops <= 0:
+            self.dispatcher.kill_process(self)
 
     def run_background(self):
         """Run as a background process."""
