@@ -29,15 +29,11 @@ class Dispatcher():
         """Add and start the process."""
         process.state = State.runnable
         if (process.type == Type.background):
-            self.r_lock.acquire()
             if len(self.runnable_stack) >= 2:
                 self.runnable_stack[-2].event.clear()
-            self.r_lock.release()
         process.event.set()
-        self.w_lock.acquire()
         self.runnable_stack.append(process)
         self.io_sys.allocate_window_to_process(process, len(self.runnable_stack) - 1)
-        self.w_lock.release()
         process.start()
 
     def dispatch_next_process(self):
@@ -106,7 +102,7 @@ class Dispatcher():
                 if process.state == State.killed:
                     return
                 self.runnable_stack.remove(process)
-                self.io_sys.move_process(process, self.insert_at_first_empty(process))
+                self.io_sys.move_process(process, self.insert_at_first_empty(process))    
 
     def proc_waiting(self, process):
         """Receive notification that process is waiting for input."""
@@ -146,6 +142,7 @@ class Dispatcher():
             pass
 
         process.state = State.killed
+        self.dispatch_next_process()
 
     def insert_at_first_empty(self, process):
         """Insert interactive process at first empty position in waiting list."""
