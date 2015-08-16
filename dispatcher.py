@@ -103,8 +103,10 @@ class Dispatcher():
                     self.io_sys.move_process(self.runnable_stack[x], x)
                 self.dispatch_next_process()
             else:
+                if process.state == State.killed:
+                    return
                 self.runnable_stack.remove(process)
-                #self.io_sys.move_process(process, self.insert_at_first_empty(process))
+                self.io_sys.move_process(process, self.insert_at_first_empty(process))
 
     def proc_waiting(self, process):
         """Receive notification that process is waiting for input."""
