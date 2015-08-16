@@ -5,7 +5,7 @@
 (18 + 14 + 5 + 0) / 4 = 9.25
 
 2. 
-- In a real system there are clock interrupts which cause the OS to decide whether a thread should continue.
-- Maintain lists for each state? 
+- In a real system there are clock interrupts which cause the OS to decide whether a thread should continue. A system call can be made to request the OS to stop a thread. 
+- Another way in which you could avoid checking for states in Python is to maintain lists for each state. For example, have a list of ready-to-run processes, a list of killed processes and a list of waiting processes.
 
-3. No. The more processors there are, the more likely they will each have to wait to access the stack and therefore the longer the wait. 
+3. No, this does not scale. The more processors there are, the more likely they will each have to wait to access the stack and therefore the longer the wait. 
