@@ -1,0 +1,11 @@
+1.
+|P1|P2|P3|P4     |P3        |P2   |P1       |
+0  1  2  3       8          16    19        26
+
+(18 + 14 + 5 + 0) / 4 = 9.25
+
+2. 
+- In a real system there are clock interrupts which cause the OS to decide whether a thread should continue.
+- Maintain lists for each state? 
+
+3. No. The more processors there are, the more likely they will each have to wait to access the stack and therefore the longer the wait. 
