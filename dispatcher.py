@@ -75,13 +75,17 @@ class Dispatcher():
         As long as the dispatcher doesn't dispatch another process this
         effectively pauses the system.
         """
+        self.lock.acquire()
         self.runnable_stack[-1].event.clear()
         self.runnable_stack[-2].event.clear()
+        self.lock.release()
 
     def resume_system(self):
         """Resume running the system."""
+        self.lock.acquire()
         self.runnable_stack[-1].event.set()
         self.runnable_stack[-2].event.set()
+        self.lock.release()
 
     def wait_until_finished(self):
         """Hang around until all runnable processes are finished."""

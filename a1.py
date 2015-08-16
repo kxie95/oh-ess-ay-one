@@ -87,7 +87,7 @@ def kill():
     return False
 
 def halt():
-    """Halt the system for 10 seconds.
+    """Halt the system for 5 seconds.
     This is so that can see the current state of the system
     without things changing.
     """
@@ -97,12 +97,12 @@ def halt():
     return False
 
 def pause():
-    """Pause input for 10 seconds.
+    """Pause input for 5 seconds.
     This is so that when you watch the system when receiving
     input from a file you can allow the system to run for a time
     without new commands arriving.
     """
-    sleep(10)
+    sleep(5)
 
 def wait():
     """Wait until all runnable processes have finished."""
