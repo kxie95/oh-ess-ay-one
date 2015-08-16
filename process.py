@@ -53,6 +53,7 @@ class Process(threading.Thread):
         # pausing and resuming the process.
         loops = self.ask_user()
         while loops > 0:
+            self.dispatcher.move_to_runnable_stack(self)
             for i in range(loops):
                 self.main_process_body()
             self.iosys.write(self, "\n")
@@ -68,7 +69,6 @@ class Process(threading.Thread):
         """Ask the user for number of loops."""
         self.iosys.write(self, "How many loops? ")
         input = self.iosys.read(self)
-        self.event.wait()
         if self.state == State.killed:
             _thread.exit()
         return int(input)

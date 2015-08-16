@@ -98,7 +98,8 @@ class IO_Sys():
         """Gets input from the window associated with 'process'."""
         # change the state of the process to waiting
         self.the_dispatcher.proc_waiting(process)
-        return self.process_buffers.get(process)
+        process.event.wait()
+        return self.process_buffers.get(process, None)
 
 # =======================================================================================================================
 
