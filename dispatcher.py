@@ -18,8 +18,7 @@ class Dispatcher():
         self.runnable_stack = []
         self.waiting_list = []
         self.event = Event()
-        self.r_lock = Lock()
-        self.w_lock = Lock()
+        self.lock = Lock()
 
     def set_io_sys(self, io_sys):
         """Set the io subsystem."""
@@ -28,16 +27,14 @@ class Dispatcher():
     def add_process(self, process):
         """Add and start the process."""
         process.state = State.runnable
+        self.lock.acquire()
         if (process.type == Type.background):
-            self.r_lock.acquire()
             if len(self.runnable_stack) >= 2:
                 self.runnable_stack[-2].event.clear()
-            self.r_lock.release()
         process.event.set()
-        self.w_lock.acquire()
         self.runnable_stack.append(process)
         self.io_sys.allocate_window_to_process(process, len(self.runnable_stack) - 1)
-        self.w_lock.release()
+        self.lock.release()
         process.start()
 
     def dispatch_next_process(self):
@@ -52,7 +49,7 @@ class Dispatcher():
 
     def to_top(self, process):
         """Move the process to the top of the runnable_stack."""
-
+        self.lock.acquire()
         stack = self.runnable_stack
 
         if len(stack) <= 1:
@@ -70,6 +67,7 @@ class Dispatcher():
         for x in range(0, len(stack)):
             self.io_sys.move_process(stack[x], x)
 
+        self.lock.release()
         process.event.set()
 
     def pause_system(self):
@@ -106,7 +104,7 @@ class Dispatcher():
                 if process.state == State.killed:
                     return
                 self.runnable_stack.remove(process)
-                self.io_sys.move_process(process, self.insert_at_first_empty(process))
+                self.io_sys.move_process(process, self.insert_at_first_empty(process))   
 
     def proc_waiting(self, process):
         """Receive notification that process is waiting for input."""
@@ -115,6 +113,7 @@ class Dispatcher():
             process.state = State.waiting
             self.runnable_stack.remove(process)
             self.io_sys.move_process(process, self.insert_at_first_empty(process))
+        self.dispatch_next_process() 
 
 
     def process_with_id(self, id):
@@ -146,6 +145,7 @@ class Dispatcher():
             pass
 
         process.state = State.killed
+        self.dispatch_next_process()
 
     def insert_at_first_empty(self, process):
         """Insert interactive process at first empty position in waiting list."""
